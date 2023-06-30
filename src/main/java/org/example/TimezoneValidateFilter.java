@@ -1,15 +1,15 @@
 package org.example;
 
 import java.io.IOException;
+import java.time.DateTimeException;
 import java.time.ZoneId;
-import java.time.zone.ZoneRulesException;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-@WebServlet(value = "/*")
+@WebFilter(value = "/time")
 public class TimezoneValidateFilter extends HttpFilter {
 
     @Override
@@ -18,6 +18,10 @@ public class TimezoneValidateFilter extends HttpFilter {
                             FilterChain chain) throws IOException, ServletException {
 
         String timeZone = request.getParameter("timezone");
+
+        if (timeZone == null) {
+            timeZone = "UTC";
+        }
 
         if (isValidTimezone(timeZone)) {
             chain.doFilter(request, response);
@@ -30,12 +34,12 @@ public class TimezoneValidateFilter extends HttpFilter {
         }
     }
 
-    private boolean isValidTimezone(String time) {
+    private boolean isValidTimezone(String timeZone) {
         try {
-            ZoneId zone = ZoneId.of(time);
-            return true; // Временная зона существует
-        } catch (ZoneRulesException e) {
-            return  false; // Временная зона не существует
+            ZoneId.of(timeZone.replace(" ", "+"));
+            return true;
+        } catch (DateTimeException e) {
+            return false;
         }
     }
 }
